@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Genie Cost Calculator — Orçamento</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --lava: #FF3621; --lava-d: #E23015;
+    --navy: #1B3139; --navy-2: #22343c;
+    --teal: #00A972; --amber: #FFAB00; --violet: #7C4DFF;
+    --ink: #1B3139; --muted: #5A6B72; --line: #E4E7E9;
+    --bg: #F6F5F2; --card: #FFFFFF; --soft: #F1F3F4;
+    --shadow: 0 1px 2px rgba(27,49,57,.06), 0 8px 24px rgba(27,49,57,.06);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    background: linear-gradient(120deg, var(--navy) 0%, var(--navy-2) 60%, #2c4a45 100%);
+    color: #fff; padding: 22px 28px; display: flex; align-items: center; gap: 16px;
+  }
+  header .logo { width: 34px; height: 34px; border-radius: 9px; background: var(--lava);
+    display: grid; place-items: center; font-weight: 800; font-size: 20px; flex: none; box-shadow: 0 4px 14px rgba(255,54,33,.4);}
+  header h1 { font-size: 20px; margin: 0; font-weight: 700; letter-spacing: -.2px; }
+  header p { margin: 2px 0 0; font-size: 13px; opacity: .72; }
+  header .badge { margin-left: auto; font-size: 11px; background: rgba(255,255,255,.12);
+    padding: 6px 12px; border-radius: 999px; letter-spacing: .3px; }
+
+  .wrap { max-width: 1320px; margin: 22px auto; padding: 0 24px 60px; display: grid;
+    grid-template-columns: 380px 1fr; gap: 22px; align-items: start; }
+  @media (max-width: 980px){ .wrap { grid-template-columns: 1fr; } }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    box-shadow: var(--shadow); }
+  .card .hd { padding: 16px 18px 10px; border-bottom: 1px solid var(--line); }
+  .card .hd h2 { margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+  .card .bd { padding: 16px 18px; }
+
+  .field { margin-bottom: 15px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; color: var(--navy); }
+  .field .sub { font-size: 11px; color: var(--muted); font-weight: 400; }
+  select, input[type=number] {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px;
+    font-size: 14px; font-family: inherit; background: #fff; color: var(--ink); outline: none;
+  }
+  select:focus, input:focus { border-color: var(--lava); box-shadow: 0 0 0 3px rgba(255,54,33,.12); }
+
+  .sec-title { display:flex; align-items:center; gap:8px; margin: 20px 0 10px; font-weight:700; font-size:13.5px; }
+  .sec-title .dot { width:9px; height:9px; border-radius:50%; }
+  .persona-grid { display: grid; grid-template-columns: 1fr 96px; gap: 8px 10px; align-items:center; }
+  .persona-grid .pl { font-size: 12.5px; }
+  .persona-grid .pl .h { color: var(--muted); font-size: 10.5px; display:block; margin-top:1px; }
+  .persona-grid input { padding: 7px 9px; text-align: right; }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  @media (max-width: 680px){ .kpis { grid-template-columns: repeat(2,1fr);} }
+  .kpi { background: var(--card); border:1px solid var(--line); border-radius: 14px; padding: 15px 16px; box-shadow: var(--shadow); }
+  .kpi .k { font-size: 11px; text-transform: uppercase; letter-spacing:.5px; color: var(--muted); font-weight:600; }
+  .kpi .v { font-size: 25px; font-weight: 800; margin-top: 6px; letter-spacing:-.5px; }
+  .kpi .u { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .kpi.primary { background: linear-gradient(135deg,#fff, #fff6f4); border-color: #ffd8cf; }
+  .kpi.primary .v { color: var(--lava); }
+  .kpi.dark { background: var(--navy); border-color: var(--navy); }
+  .kpi.dark .k, .kpi.dark .u { color: #9fb3b8; }
+  .kpi.dark .v { color: #fff; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 9px 10px; text-align: right; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  th { font-size: 10.5px; text-transform: uppercase; letter-spacing:.4px; color: var(--muted); font-weight: 700; }
+  tr.grp td { background: var(--soft); font-weight: 700; color: var(--navy); }
+  tr.total td { font-weight: 800; border-top: 2px solid var(--navy); border-bottom: none; }
+  td .tag { font-size:10px; padding:1px 7px; border-radius:999px; background:var(--soft); color:var(--muted); }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .mini { font-size: 12px; color: var(--muted); }
+  .btnrow { display:flex; gap:8px; flex-wrap: wrap; margin-top: 4px; }
+  button.act { border:1px solid var(--line); background:#fff; color: var(--navy); font-weight:600;
+    padding: 8px 13px; border-radius: 10px; cursor:pointer; font-size:12.5px; font-family:inherit; }
+  button.act:hover { border-color: var(--lava); color: var(--lava); }
+  button.act.solid { background: var(--lava); color:#fff; border-color: var(--lava); }
+  button.act.solid:hover { background: var(--lava-d); color:#fff; }
+  .note { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+  .scenarios { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;}
+  .scenarios .chip { background: var(--soft); border:1px solid var(--line); border-radius:999px; padding:5px 10px 5px 12px;
+    font-size:12px; display:flex; align-items:center; gap:6px; }
+  .scenarios .chip button { border:none; background:none; cursor:pointer; color:var(--muted); font-size:14px; line-height:1; padding:0;}
+  .scenarios .chip:hover { border-color: var(--lava); }
+  .foot { max-width:1320px; margin: 0 auto; padding: 0 24px 40px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">G</div>
+  <div>
+    <h1>Genie Cost Calculator</h1>
+    <p>Projete o consumo e o custo de Genie One e Genie Agents para montar seu orçamento</p>
+  </div>
+  <div class="badge">Modelo: Mosaic GenAI Calculator · ±10%</div>
+</header>
+
+<div class="wrap">
+  <!-- INPUTS -->
+  <div class="card">
+    <div class="hd"><h2>Premissas</h2></div>
+    <div class="bd">
+      <div class="field">
+        <label>Cloud e Região <span class="sub">(define o preço $/DBU)</span></label>
+        <select id="region"></select>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Free tier <span class="sub">DBU/usuário/mês</span></label>
+          <input type="number" id="freeDbu" value="150" min="0" step="10" />
+        </div>
+        <div class="field">
+          <label>Desconto / promo <span class="sub">%</span></label>
+          <input type="number" id="promo" value="0" min="0" max="100" step="5" />
+        </div>
+      </div>
+
+      <div class="sec-title"><span class="dot" style="background:var(--lava)"></span> Genie One — usuários</div>
+      <div class="persona-grid" id="grid-genieOne"></div>
+
+      <div class="sec-title"><span class="dot" style="background:var(--violet)"></span> Genie Agent — usuários</div>
+      <div class="persona-grid" id="grid-genieAgent"></div>
+
+      <div class="btnrow" style="margin-top:18px;">
+        <button class="act" onclick="loadPreset('calc')">Padrão calculadora</button>
+        <button class="act" onclick="loadPreset('pilot')">Piloto (25)</button>
+        <button class="act" onclick="loadPreset('zero')">Zerar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTPUTS -->
+  <div style="display:grid; gap:22px;">
+    <div class="kpis">
+      <div class="kpi primary">
+        <div class="k">Custo mensal (regime)</div>
+        <div class="v" id="kpi-monthly">$0</div>
+        <div class="u" id="kpi-monthly-list">lista: $0/mês</div>
+      </div>
+      <div class="kpi">
+        <div class="k">Orçamento ano 1</div>
+        <div class="v" id="kpi-annual">$0</div>
+        <div class="u">com rampa de adoção</div>
+      </div>
+      <div class="kpi">
+        <div class="k">DBUs faturados</div>
+        <div class="v" id="kpi-billed">0</div>
+        <div class="u" id="kpi-free">0% no free tier</div>
+      </div>
+      <div class="kpi dark">
+        <div class="k">Preço da região</div>
+        <div class="v" id="kpi-rate">$0.07</div>
+        <div class="u">por DBU (Genie)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hd" style="display:flex;align-items:center;justify-content:space-between;">
+        <h2>Projeção de orçamento — 12 meses</h2>
+        <div style="display:flex;gap:14px;align-items:center;">
+          <div style="font-size:12px;color:var(--muted);">Adoção inicial
+            <input type="number" id="rampStart" value="30" min="0" max="100" step="5" style="width:58px;padding:5px 6px;display:inline-block;margin-left:4px;"> %</div>
+          <div style="font-size:12px;color:var(--muted);">100% no mês
+            <input type="number" id="rampMonths" value="6" min="1" max="12" step="1" style="width:52px;padding:5px 6px;display:inline-block;margin-left:4px;"></div>
+        </div>
+      </div>
+      <div class="bd">
+        <canvas id="chart" height="96"></canvas>
+        <div class="note" style="margin-top:10px;">
+          O consumo cresce linearmente da adoção inicial até 100% dos usuários no mês indicado, refletindo o ramp-up real de um rollout. O <b>orçamento ano 1</b> é a soma dos 12 meses.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hd"><h2>Detalhamento por perfil (regime, 100% adoção)</h2></div>
+      <div class="bd" style="padding-top:6px; overflow-x:auto;">
+        <table id="breakdown">
+          <thead><tr>
+            <th>Perfil</th><th>Usuários</th><th>DBU/usuário</th><th>DBU incorrido</th>
+            <th>Free tier</th><th>DBU faturado</th><th>Custo/mês</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hd"><h2>Cenários salvos</h2></div>
+      <div class="bd">
+        <div class="btnrow">
+          <input type="text" id="scenName" placeholder="Nome do cenário (ex.: AT&amp;T MX Genie)" style="flex:1;min-width:180px;">
+          <button class="act solid" onclick="saveScenario()">Salvar cenário atual</button>
+        </div>
+        <div class="scenarios" id="scenList"></div>
+        <div class="note" style="margin-top:10px;">Cenários ficam salvos neste navegador (localStorage). Salve premissas por cliente/rollout para comparar orçamentos.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="foot note">
+  Estimativa interna com margem de ±10%, baseada no modelo do Mosaic GenAI Calculator (go/genaicalculator, aba Genie · atualizado set/2026).
+  Custo = DBUs faturados × preço da região. Free tier de 150 DBU/usuário/mês aplicado por perfil. Valores em preço de lista (USD), antes de descontos contratuais salvo quando informado o campo promo.
+</div>
+
+<script>
+const PERSONA_ORDER = ["beginner","practitioner","power","superPower"];
+const PERSONA_LABEL = { beginner:"Beginners", practitioner:"Practitioners", power:"Power Users", superPower:"Super Power Users" };
+const PRODUCT_LABEL = { genieOne:"Genie One", genieAgent:"Genie Agent" };
+let MODEL = null;
+let chart = null;
+
+const fmtUsd = (n) => "$" + Math.round(n).toLocaleString("en-US");
+const fmtUsd2 = (n) => "$" + n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtInt = (n) => Math.round(n).toLocaleString("pt-BR");
+const fmtDbu = (n) => n.toLocaleString("pt-BR",{maximumFractionDigits:0});
+
+async function boot(){
+  MODEL = await (await fetch("/api/model")).json();
+  // region select
+  const rsel = document.getElementById("region");
+  MODEL.regions.forEach(r => {
+    const o = document.createElement("option");
+    o.value = r.name; o.textContent = r.name + "  ·  $" + r.rate.toFixed(3) + "/DBU";
+    rsel.appendChild(o);
+  });
+  rsel.value = "AWS-SA (Brazil)"; // Brazil default (user is BR); change freely
+  // persona grids
+  ["genieOne","genieAgent"].forEach(prod => {
+    const g = document.getElementById("grid-"+prod);
+    PERSONA_ORDER.forEach(p => {
+      const wrap = document.createElement("div");
+      wrap.className = "pl";
+      wrap.innerHTML = `<b>${PERSONA_LABEL[p]}</b><span class="h">${MODEL.personaHints[prod][p]}</span>`;
+      const inp = document.createElement("input");
+      inp.type="number"; inp.min="0"; inp.step="1"; inp.value="0";
+      inp.id = `u-${prod}-${p}`;
+      inp.addEventListener("input", render);
+      g.appendChild(wrap); g.appendChild(inp);
+    });
+  });
+  ["region","freeDbu","promo","rampStart","rampMonths"].forEach(id =>
+    document.getElementById(id).addEventListener("input", render));
+  loadPreset("calc");
+  renderScenarios();
+}
+
+function readUsers(){
+  const u = {genieOne:{}, genieAgent:{}};
+  ["genieOne","genieAgent"].forEach(prod => PERSONA_ORDER.forEach(p => {
+    u[prod][p] = +(document.getElementById(`u-${prod}-${p}`).value || 0);
+  }));
+  return u;
+}
+function rate(){ const r = MODEL.regions.find(x=>x.name===document.getElementById("region").value); return r?r.rate:0.07; }
+
+function computeAt(users, adoption){
+  const free = +document.getElementById("freeDbu").value || 0;
+  const r = rate();
+  let inc=0, fr=0, bill=0; const lines=[];
+  ["genieOne","genieAgent"].forEach(prod => PERSONA_ORDER.forEach(p => {
+    const n = (users[prod][p]||0) * adoption;
+    const dbu = MODEL.personaDbu[prod][p];
+    const incurred = n*dbu;
+    const freed = Math.min(n*free, incurred);
+    const billed = Math.max(incurred-freed, 0);
+    inc+=incurred; fr+=freed; bill+=billed;
+    lines.push({prod,p,n,dbu,incurred,freed,billed,cost:billed*r});
+  }));
+  const promo = +document.getElementById("promo").value || 0;
+  const costList = bill*r;
+  const costPromo = costList*(1-promo/100);
+  return {r, lines, inc, fr, bill, costList, costPromo, pctFree: inc? fr/inc*100:0};
+}
+
+function render(){
+  const users = readUsers();
+  const steady = computeAt(users, 1);
+
+  // KPIs
+  document.getElementById("kpi-monthly").textContent = fmtUsd(steady.costPromo);
+  document.getElementById("kpi-monthly-list").textContent = "lista: " + fmtUsd(steady.costList) + "/mês";
+  document.getElementById("kpi-billed").textContent = fmtDbu(steady.bill);
+  document.getElementById("kpi-free").textContent = steady.pctFree.toFixed(0) + "% coberto pelo free tier";
+  document.getElementById("kpi-rate").textContent = "$" + steady.r.toFixed(3);
+
+  // breakdown table
+  const tb = document.querySelector("#breakdown tbody");
+  tb.innerHTML = "";
+  ["genieOne","genieAgent"].forEach(prod => {
+    const gtr = document.createElement("tr"); gtr.className="grp";
+    gtr.innerHTML = `<td colspan="7">${PRODUCT_LABEL[prod]}</td>`; tb.appendChild(gtr);
+    steady.lines.filter(l=>l.prod===prod).forEach(l => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${PERSONA_LABEL[l.p]}</td><td>${fmtInt(l.n)}</td>
+        <td>${l.dbu.toFixed(1)}</td><td>${fmtDbu(l.incurred)}</td>
+        <td style="color:var(--teal)">${fmtDbu(l.freed)}</td>
+        <td><b>${fmtDbu(l.billed)}</b></td><td>${fmtUsd2(l.cost)}</td>`;
+      tb.appendChild(tr);
+    });
+  });
+  const tr = document.createElement("tr"); tr.className="total";
+  tr.innerHTML = `<td>Total</td><td>${fmtInt(steady.lines.reduce((a,l)=>a+l.n,0))}</td><td>—</td>
+    <td>${fmtDbu(steady.inc)}</td><td style="color:var(--teal)">${fmtDbu(steady.fr)}</td>
+    <td>${fmtDbu(steady.bill)}</td><td>${fmtUsd2(steady.costList)}</td>`;
+  tb.appendChild(tr);
+
+  // projection
+  const start = (+document.getElementById("rampStart").value || 0)/100;
+  const full = Math.max(1, Math.min(12, +document.getElementById("rampMonths").value || 1));
+  const labels=[], data=[]; let annual=0;
+  for(let m=1;m<=12;m++){
+    const adoption = m>=full ? 1 : start + (1-start)*(m-1)/(full-1||1);
+    const c = computeAt(users, adoption).costPromo;
+    annual += c;
+    labels.push("M"+m); data.push(Math.round(c));
+  }
+  document.getElementById("kpi-annual").textContent = fmtUsd(annual);
+  drawChart(labels, data);
+}
+
+function drawChart(labels, data){
+  const ctx = document.getElementById("chart");
+  if(chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: { labels, datasets: [{ label:"Custo mensal projetado (USD)", data,
+      backgroundColor: "rgba(255,54,33,.85)", borderRadius:6, maxBarThickness:44 }]},
+    options: {
+      plugins: { legend: {display:false},
+        tooltip: { callbacks: { label: c => "  " + fmtUsd(c.parsed.y) + " / mês" } } },
+      scales: {
+        y: { beginAtZero:true, grid:{color:"#EEF0F1"},
+             ticks:{ callback: v => "$"+ (v>=1000? (v/1000)+"k" : v) } },
+        x: { grid:{display:false} }
+      }
+    }
+  });
+}
+
+function loadPreset(kind){
+  const set = (prod,p,v)=> document.getElementById(`u-${prod}-${p}`).value = v;
+  if(kind==="calc"){
+    set("genieOne","beginner",500); set("genieOne","practitioner",200); set("genieOne","power",25); set("genieOne","superPower",10);
+    set("genieAgent","beginner",100); set("genieAgent","practitioner",50); set("genieAgent","power",10); set("genieAgent","superPower",5);
+  } else if(kind==="pilot"){
+    set("genieOne","beginner",15); set("genieOne","practitioner",7); set("genieOne","power",2); set("genieOne","superPower",1);
+    set("genieAgent","beginner",0); set("genieAgent","practitioner",0); set("genieAgent","power",0); set("genieAgent","superPower",0);
+  } else {
+    ["genieOne","genieAgent"].forEach(prod=>PERSONA_ORDER.forEach(p=>set(prod,p,0)));
+  }
+  render();
+}
+
+/* ---- scenarios (localStorage) ---- */
+const LS_KEY = "genie_cost_scenarios";
+function currentState(){
+  return {
+    region: document.getElementById("region").value,
+    freeDbu: document.getElementById("freeDbu").value,
+    promo: document.getElementById("promo").value,
+    rampStart: document.getElementById("rampStart").value,
+    rampMonths: document.getElementById("rampMonths").value,
+    users: readUsers(),
+  };
+}
+function applyState(s){
+  document.getElementById("region").value = s.region;
+  document.getElementById("freeDbu").value = s.freeDbu;
+  document.getElementById("promo").value = s.promo;
+  if(s.rampStart) document.getElementById("rampStart").value = s.rampStart;
+  if(s.rampMonths) document.getElementById("rampMonths").value = s.rampMonths;
+  ["genieOne","genieAgent"].forEach(prod=>PERSONA_ORDER.forEach(p=>
+    document.getElementById(`u-${prod}-${p}`).value = (s.users[prod]&&s.users[prod][p])||0));
+  render();
+}
+function getScenarios(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||"{}"); }catch(e){ return {}; } }
+function saveScenario(){
+  const name = (document.getElementById("scenName").value||"").trim();
+  if(!name){ document.getElementById("scenName").focus(); return; }
+  const all = getScenarios(); all[name] = currentState();
+  localStorage.setItem(LS_KEY, JSON.stringify(all));
+  document.getElementById("scenName").value=""; renderScenarios();
+}
+function renderScenarios(){
+  const all = getScenarios(); const box = document.getElementById("scenList"); box.innerHTML="";
+  const names = Object.keys(all);
+  if(!names.length){ box.innerHTML = '<span class="mini">Nenhum cenário salvo ainda.</span>'; return; }
+  names.forEach(n => {
+    const chip = document.createElement("div"); chip.className="chip";
+    const label = document.createElement("span"); label.textContent = n; label.style.cursor="pointer";
+    label.onclick = ()=> applyState(all[n]);
+    const del = document.createElement("button"); del.textContent="✕";
+    del.onclick = ()=>{ const a=getScenarios(); delete a[n]; localStorage.setItem(LS_KEY,JSON.stringify(a)); renderScenarios(); };
+    chip.appendChild(label); chip.appendChild(del); box.appendChild(chip);
+  });
+}
+
+boot();
+</script>
+</body>
+</html>
