@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Genie Cost Calculator</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center; padding:40px 20px;
+    background: radial-gradient(1200px 600px at 50% -10%, #22343c, #12212680), #0e1a1e;
+    color:#fff; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  .box { max-width: 720px; width:100%; text-align:center; }
+  h1 { font-size: 34px; margin:0 0 10px; letter-spacing:-.5px; }
+  p.lead { font-size:16px; color:#a9bcc1; margin:0 auto 36px; max-width:520px; line-height:1.55; }
+  .cards { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:620px){ .cards{ grid-template-columns:1fr; } }
+  a.card { text-decoration:none; color:inherit; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
+    border-radius:18px; padding:26px 22px; text-align:left; transition:.15s; display:block; }
+  a.card:hover { transform:translateY(-3px); border-color:rgba(255,255,255,.35); background:rgba(255,255,255,.09); }
+  .tag { display:inline-block; font-size:11px; letter-spacing:.5px; text-transform:uppercase; padding:5px 11px; border-radius:999px; font-weight:700; margin-bottom:14px; }
+  .tag.br { background:#FF3621; color:#fff; }
+  .tag.es { background:#EC0000; color:#fff; }
+  a.card h2 { margin:0 0 6px; font-size:20px; }
+  a.card span { color:#a9bcc1; font-size:13.5px; line-height:1.5; }
+  .go { margin-top:16px; font-size:13px; font-weight:700; color:#fff; opacity:.9; }
+  footer { margin-top:36px; font-size:12px; color:#7d9095; line-height:1.6; }
+  footer a { color:#a9bcc1; }
+</style>
+</head>
+<body>
+  <div class="box">
+    <h1>Genie Cost Calculator</h1>
+    <p class="lead">Proyecta el consumo y el costo de Genie One / Genie Agents por perfil de usuario y arma tu presupuesto. Modelo basado en el Mosaic GenAI Calculator (±10%).</p>
+    <div class="cards">
+      <a class="card" href="/es">
+        <span class="tag es">Español · Santander</span>
+        <h2>Calculadora de Costos Genie</h2>
+        <span>Versión dedicada a Banco Santander, en español, con región Azure por defecto.</span>
+        <div class="go">Abrir →</div>
+      </a>
+      <a class="card" href="/br">
+        <span class="tag br">Português · Databricks</span>
+        <h2>Genie Cost Calculator</h2>
+        <span>Versão base em português, com região AWS Brasil por defeito.</span>
+        <div class="go">Abrir →</div>
+      </a>
+    </div>
+    <footer>
+      Estimativas com margem de ±10%, em preço de lista (USD).<br>
+      Código: <a href="https://github.com/mousastech/genie-calculator">github.com/mousastech/genie-calculator</a>
+    </footer>
+  </div>
+</body>
+</html>
