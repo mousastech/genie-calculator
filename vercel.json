@@ -2,8 +2,8 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/es", "destination": "/genie-cost-santander/static/index.html" },
-    { "source": "/santander", "destination": "/genie-cost-santander/static/index.html" },
-    { "source": "/br", "destination": "/genie-cost-calculator/static/index.html" }
+    { "source": "/es", "destination": "/genie-cost-santander/static" },
+    { "source": "/santander", "destination": "/genie-cost-santander/static" },
+    { "source": "/br", "destination": "/genie-cost-calculator/static" }
   ]
 }
